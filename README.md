@@ -1,4 +1,4 @@
-# Vietnamese Real Estate Data Scraper
+# Web-Scraping-Data - Vietnamese Real Estate Data Scraper
 
 This project is a Python-based tool developed to scrape data from the Vietnamese real estate website [nhadat24h.net](https://nhadat24h.net/). It is part of a challenge to develop a semantic search engine for real estate properties in Vietnam.
 
@@ -21,7 +21,3 @@ To use this tool, follow these steps:
 1. Clone or download this repository to your local machine.
 2. Ensure you have Python 3.x installed.
 3. Install the required dependencies by running the following command:
-
-   ```shell
-   pip install -r requirements.txt
-# Web-Scraping-Data
