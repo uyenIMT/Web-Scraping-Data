@@ -22,3 +22,5 @@ To use this tool, follow these steps:
 2. Ensure you have Python 3.x installed.
 3. Install the required dependencies by running the following command:<br>
 pip install
+
+Test git connect
