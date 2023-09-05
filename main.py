@@ -1,9 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import os
-import base64
 import re
+from urllib.parse import unquote
 from timestamp_utils import convert_relative_to_exact_timestamp
 
 # Send a GET request to the website and retrieve the HTML content
@@ -27,260 +26,288 @@ for sub_element in sub_elements:
         sub_menu = sub_menu_item.find('a').get('href')
         sub_menus.append(sub_menu)
 print(sub_menus)
-data = []  # Create an empty list to store the scraped data
+data = []
+csv_file = 'scraped_data17.csv'
 
+# Write the header row to the CSV file
+with open(csv_file, 'w', newline='', encoding='utf-8-sig') as file:
+    fieldnames = ['Data source','Agent','Category','ID','Title','Post link', 'Price','Area','Location','Timestamp','Estate type','Certification status','Direction','Rooms','Bedrooms','Kitchen','Living room','Bathrooms','Front width','Floor', 'Parking slot','Description','Seller name','Seller type','Phone','Images','Image URL','Email','Road width','Sizes']
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    writer.writeheader()  # Write the header row
+
+sub_menu_data = {}
 
 for sub_menu in sub_menus:
-    for i in range (1,2):
-        url = f'{website}?page={sub_menu}&page={i}'
+    links_for_sub_menu = []
+    timestamps_for_sub_menu = []
+    for i in range (1,11):
+        url = f'{website}{sub_menu}/page{i}'
+        # print(url)
         response = requests.get(url)
         html_content = response.text
-
-        links=[]
-
+        
         # Create a BeautifulSoup object to parse the HTML content
         soup = BeautifulSoup(html_content, 'html.parser')
     
         # Extract links, images, titles, prices, area, and timestamps
         property_elements = soup.find_all('div', class_='dv-item')
     
-        for property_element in property_elements:
+        for soup in property_elements:
             # Extract links
-            link = property_element.find('a').get('href')
-            links.append(link)
+            link = soup.find('a').get('href')
+            links_for_sub_menu.append(link)
+            # print(link)
+    
+            # Extract the timestamp
+            icon_element = soup.find('i', class_='fa-clock-o')
+            if icon_element:
+                timestamp = icon_element.find_parent('p').text.strip()
+                exact_timestamp = convert_relative_to_exact_timestamp(timestamp).strftime("%d/%m/%Y, %H:%M:%S")
+                timestamps_for_sub_menu.append(exact_timestamp)
+                # print(exact_timestamp)
+            else:
+                timestamps_for_sub_menu.append(' ')
 
-            for link in links:
+    # Store the sub-menu, links, and timestamps within the property data
+    property_data = {
+        'Category': sub_menu,
+        'Post link': links_for_sub_menu,
+        'Timestamp': timestamps_for_sub_menu
+    }
 
-                # Extract image URLs
-                image_element = property_element.find('img', class_='imageThumb')
-                image_url = image_element.get('data-src') if image_element else ''
-        
-                # Extract ID
-                pattern = r'ID(\d+)'
-                match = re.search(pattern, link)
-                if match:
-                    extracted_id = match.group(1)
-                    #print(extracted_id)
-                else:
-                    print("ID not found in the link.")
+    # Append the property data to the list
+    data.append(property_data)
 
-                # Extract title of posts
-                title_element = property_element.find('h1', id='txtcontenttieudetin')
-                if title_element is not None:
-                    title = title_element.get_text()
-                    # Remove or replace special characters in the title
-                    title = re.sub(r'[\/:*?"<>|]', '_', title)
-                else:
-                    title = 'N/A'
-        
-                # Extract the price
-                price_element = property_element.find('label', class_='a-txt-cl1')
-                if price_element is not None:
-                    price = price_element.text.strip()
-                else:
-                    price = 'N/A'
-                
-                # Extract the location
-                location_element = property_element.find('label', class_='lb-pri-dt')
-                if location_element is not None:
-                    location = location_element.text.strip()
-                else:
-                    location = 'N/A'
-        
-                # Extract the area
-                area_element = property_element.find('label', class_='strong2')
-                if area_element is not None:
-                    area = area_element.text.strip()
-                else:
-                    area = 'N/A'
-        
-                # Extract the timestamp
-                timestamp_elements = property_element.find('label', id='ContentPlaceHolder1_ct100_lbDate')
-                if timestamp_elements:
-                    timestamp = timestamp_elements.find_next_sibling(string=True)
-                    if timestamp:
-                        timestamp = timestamp.strip()
-                        timestamp = convert_relative_to_exact_timestamp(timestamp)
-                    else:
-                        timestamp = 'N/A'
-                else:
-                    timestamp = 'N/A'
-                            
-                # Extract the direction
-                direction_elements = property_element.find('label', class_='ContentPlaceHolder1_ct100_lbHuong')
-                if direction_elements:
-                    text_element = direction_elements.find_next_sibling(string=True)
-                    if text_element:
-                        direction = text_element.strip()
-                    else:
-                        direction = 'N/A'
-                else:
-                    direction = 'N/A'
-                
-                # Extract the number of floor
-                floor_elements = property_element.find('td', class_='col1')
-                if floor_elements:
-                    text_element = floor_elements.find_next_sibling(string=True)
-                    if text_element:
-                        floor = text_element.replace("tầng", "").strip()
-                    else:
-                        floor = 'N/A'
-                else:
-                    floor = 'N/A'
-                                    
-                # Extract the number of bedroom
-                bedroom_elements = property_element.find('i', class_='fa-bed')
-                if bedroom_elements:
-                    text_element = bedroom_elements.find_next_sibling(string=True)
-                    if text_element:
-                        bedroom = text_element.replace("Phòng ngủ", "").strip()
-                    else:
-                        bedroom = 'N/A'
-                else:
-                    bedroom = 'N/A'
-                
-                # Extract the number of wc
-                wc_elements = property_element.find('i', class_='fa-bath')
-                if wc_elements:
-                    text_element = wc_elements.find_next_sibling(string=True)
-                    if text_element:
-                        wc = text_element.replace("WC", "").strip()
-                    else:
-                        wc = 'N/A'
-                else:
-                    wc = 'N/A'
-
-                # Extract the "Mat-tien"
-                mt_elements = property_element.find('i', class_='fa-arrows-alt')
-                if mt_elements:
-                    text_element = mt_elements.find_next_sibling(string=True)
-                    if text_element:
-                        mt = text_element.replace("Mặt tiền:", "").strip()
-                    else:
-                        mt = 'N/A'
-                else:
-                    mt = 'N/A'
-                
-                # Extract the parking slots
-                park_elements = property_element.find('i', class_='fa-car')
-                if park_elements:
-                    text_element = park_elements.find_next_sibling(string=True)
-                    if text_element:
-                        park = text_element.replace("Chỗ để ôtô", "").strip()
-                    else:
-                        park = 'N/A'
-                else:
-                    park = 'N/A'
-
-                # Extract the road width
-                road_elements = property_element.find('i', class_='fa-road')
-                if road_elements:
-                    text_element = road_elements.find_next_sibling(string=True)
-                    if text_element:
-                        road = text_element.replace("Đường vào: Rộng ", "").strip()
-                    else:
-                        road = 'N/A'
-                else:
-                    road = 'N/A'
-
-                # Extract the description
-                des_element = property_element.find('label', class_='lb-des')
-                if des_element is not None:
-                    des = des_element.text.strip()
-                else:
-                    des = 'N/A'
-
-                # Extract the seller
-                seller_element = property_element.find('div', class_='fullname')
-                if seller_element is not None:
-                    seller = seller_element.text.strip()
-                else:
-                    seller = 'N/A'
-
-                # Extract the contact of seller
-                contact_element = property_element.find('a', class_='call')
-                if contact_element:
-                    contact = re.search(r'\d{10}', contact_element['viewmobinumber']).group()
-                else:
-                    contact = "N/A"
-                
-            property_data = {
-                'Data source': 'nhadat24h.net',
-                'Agent': 'Uyen Nguyen',
-                'Category': sub_menu,
-                'ID': extracted_id,
-                'Title': title,
-                'Post link': link,
-                'Price': price,
-                'Area': area,
-                'Location': location,
-                'Timestamp': timestamp,
-                # 'Estate type':,
-                # 'Certification status':,
-                'Direction': direction,
-                # 'Rooms':,
-                'Bedrooms': bedroom,
-                # 'Kitchen':,
-                # 'Living room':,
-                'Bathrooms': wc,
-                'Front width': mt,
-                'Floor': floor,
-                'Parking slot': park,
-                'Description': des,
-                'Seller name': seller,
-                # 'Seller type':,
-                'Phone': contact,
-                # 'Images':,
-                'Image URL': image_url,
-                # 'Email':,
-                'Road width': road,
-                # 'Sizes':   
-            }
-            print(property_data)
-            data.append(property_data)
-print("End scraping")
-
-print('Start downloading images')
-# Create a directory to store the downloaded images
-os.makedirs('scraped_images5', exist_ok=True)
-
-# Download the images
 for property_data in data:
-    image_url = property_data['Image URL']
-    title = property_data['Title']
+    sub_menu = property_data['Category']
+    links = property_data['Post link']
+    timestamps = property_data['Timestamp']
+    for link, timestamp in zip(links, timestamps):
+        url = f'{website}{link}'
+        try:
+            response = requests.get(url)
+        # Check the response status code to see if the request was successful
+            if response.status_code == 200:
+            # Process the response content as needed
+            # Your processing code here
+                print(f"Successfully fetched data from {url} at timestamp {timestamp}")
+            else:
+                print(f"Request to {url} returned status code {response.status_code} at timestamp {timestamp}")
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to connect to {url} at timestamp {timestamp}. Exception: {e}")
+        # response = requests.get(url)
+        html_content = response.text
 
-    # Skip the property if it doesn't have an image
-    if not image_url:
-        continue
+        # Create a BeautifulSoup object to parse the HTML content
+        soup = BeautifulSoup(html_content, 'html.parser')
 
-    # Replace invalid characters in the title
-    title = re.sub(r'[\/:*?"<>|]', '_', title)
+        # Extract links, images, titles, prices, area, and timestamps
+        property_elements = soup.find_all('div', class_='ct-in-all')
 
-    if image_url.startswith('data:image'):  # Check if it's a base64-encoded image
-        # Extract the base64 data part
-        encoded_image = image_url.split(',', 1)[1]
+        # Extract image URLs
+        image_element = soup.find('img', class_='imageThumb')
+        image_url = image_element.get('data-src') if image_element else ''
 
-        # Decode the base64 data
-        image_content = base64.b64decode(encoded_image)
-    else:  # Regular image URL
-        response = requests.get(image_url)
-        image_content = response.content
+        # Extract ID
+        pattern = r'ID(\d+)'
+        match = re.search(pattern, url)
+        if match:
+            extracted_id = match.group(1)
+            # print(extracted_id)
+        else:
+            extracted_id = ' '
+            print("ID not found in the link.")
 
-    filename = f'scraped_images5/image_{title}.jpg'  # Modify the filename as needed
-    with open(filename, 'wb') as file:
-        file.write(image_content)
-print("End downloading images")
-     
-print('Writing CSV file')
-# Specify the CSV file path
-csv_file = 'scraped_data5.csv'
+        # Extract title of posts
+        title_element = soup.find('h1', id='txtcontenttieudetin')
+        if title_element is not None:
+            title = title_element.text.strip()
+        else:
+            title = ' '
 
-# Write the data to CSV
-with open(csv_file, 'w', newline='', encoding='utf-8') as file:
-    fieldnames = ['Data source','Agent','Category','ID','Title','Post link', 'Price','Area','Location','Timestamp','Direction','Bedrooms', 'Bathrooms','Front width', 'Floor', 'Parking slot','Description','Seller name','Phone','Image URL','Road width']
-    writer = csv.DictWriter(file, fieldnames=fieldnames)
-    writer.writeheader()  # Write the header row
-    writer.writerows(data)  # Write the data rows
+        # Extract the price
+        price_element = soup.find('label', class_='lb-pri-dt')
+        if price_element:
+            price_text = price_element.get_text()
+
+            # Use regular expression to extract the numeric part and the unit
+            price_match = re.search(r'(\d+)\s*(\S+)\s*-', price_text)
+            
+            if price_match:
+                price_amount = price_match.group(1)
+                price_unit = price_match.group(2)
+                price = f"{price_amount} {price_unit}"
+            else:
+                price = ' '
+        else:
+            price = ' '
+
+        # Extract the location
+        location_element = soup.find('label', id='ContentPlaceHolder1_ctl00_lbTinhThanh')
+        if location_element is not None:
+            location = location_element.text.strip()
+        else:
+            location = ' '
+
+        # Extract the area
+        area_element = soup.find('label', class_='lb-pri-dt')  
+        if area_element:
+            # Find the area amount within the strong2 class
+            area_amount_element = area_element.find('label', class_='strong2')
+            if area_amount_element:
+                area_amount = area_amount_element.get_text().strip()
+
+                # Find the area unit (text before the area amount)
+                area_unit_element = area_element.contents[4].strip()
+
+                area = f"{area_amount} {area_unit_element}"
+            else:
+                area = ' '
+        else:
+            area = ' '
+                
+        # Extract the direction
+        direction_element = soup.find('label', id='ContentPlaceHolder1_ctl00_lbHuong')
+        if direction_element is not None:
+            direction = direction_element.text.strip()
+        else:
+            direction = ' '
 
 
-print(f'Scraped data and images are saved successfully.')
+        # Extract the number of floor
+        floor_element = soup.find('td', string='Số tầng')
+        if floor_element:
+            floor = floor_element.find_next('td').get_text(strip=True)
+        else:
+            floor = ' '
+
+                            
+        # Extract the number of bedroom
+        br_element = soup.find('td', string='Phòng Ngủ')
+        if br_element:
+            br = br_element.find_next('td').get_text(strip=True)
+        else:
+            br = ' '
+
+        # Extract the number of wc
+        wc_element = soup.find('td', string='Phòng WC')
+        if wc_element:
+            wc = wc_element.find_next('td').get_text(strip=True) 
+        else:
+            wc = ' '
+
+        # Extract the front width
+        fw_element = soup.find('td', string='Mặt tiền')
+        if fw_element:
+            fw = fw_element.find_next('td').get_text(strip=True)
+        else:
+            fw = ' '
+
+        # Extract the parking slots
+        park_element = soup.find('td', string='Chỗ để xe')
+        if park_element:
+            park = park_element.find_next('td').get_text(strip=True)
+        else:
+            park = ' '
+
+        # Extract the road width
+        rw_element = soup.find('td', string='Đường vào')
+        if rw_element:
+            rw = rw_element.find_next('td').get_text(strip=True)
+        else:
+            rw = ' '
+
+        # Extract the description
+        des_element = soup.find('div', class_='dv-txt-mt')
+        if des_element is not None:
+            des = des_element.text.strip()
+            des = re.sub(r'<br\s?/?>', ' ', des)
+            des = re.sub(r'%\d+[a-zA-Z/]+%3e', ' ', des)  # Remove encoded entities like %3cbr/%3e
+            des = re.sub(r'%\d{2}', ' ', des)  # Remove encoded entities like %29
+            des = re.sub(r'%\d{1}a', ' ', des)
+            des = re.sub(r'[^\w\s,.]+', ' ', des) # Remove special characters
+            des = des.replace('\n', ' ')
+        else:
+            des = ' '
+
+        # Extract the seller
+        seller_element = soup.find('label', class_='fullname')
+        if seller_element is not None:
+            seller = seller_element.text.strip()
+        else:
+            seller = ' '
+
+        # Extract the phone number of seller
+        phone_element = soup.find('a', class_='call')
+        if phone_element:
+            phone_number = phone_element['href'].split(':')[-1]
+            # print(phone_number)
+        else:
+            phone_number = ' '
+
+        # Extract the estate type
+        estate_type = soup.find('label', id='ContentPlaceHolder1_ctl00_lbLoaiBDS')
+        if estate_type is not None:
+            estate_type = estate_type.get_text()
+        else:
+            estate_type = ' '
+
+        # Extract the seller type
+        icon_element = soup.find('i', class_='fas fa-user')
+        if icon_element:
+            seller_type = icon_element.find_parent('label').text.strip()
+        else:
+            seller_type = ' '
+
+        # Extract the Certification status
+        cs_element = soup.find('div', class_= 'dv-time-dt')
+        if cs_element:
+            cs_strong_element = cs_element.find('strong')
+            if cs_strong_element:
+                cs = cs_strong_element.get_text(strip=True)
+            else:
+                cs = ' '
+        else:
+            cs = ' '
+
+        property_data = {
+            'Data source': 'nhadat24h.net',
+            'Agent': 'Uyen Nguyen',
+            'Category': sub_menu,
+            'ID': extracted_id,
+            'Title': title,
+            'Price': price,
+            'Location': location,
+            'Area': area,
+            'Timestamp': timestamp,
+            'Direction': direction,
+            'Floor': floor,
+            'Bedrooms': br,
+            'Bathrooms': wc,
+            'Parking slot': park,
+            'Road width': rw,
+            'Front width': fw,
+            'Post link': f'{website}{link}',
+            'Image URL': f'{website}{image_url}',
+            'Description': des,
+            'Seller name': seller,
+            'Phone': phone_number,
+            'Estate type': estate_type,
+            'Certification status': cs,
+            'Rooms': None,
+            'Kitchen': None,
+            'Living room': None,
+            'Seller type': seller_type,
+            'Images': None,
+            'Email': None,
+            'Sizes': None
+        }
+        # print(property_data)
+        if property_data not in data:
+            data.append(property_data)
+
+            with open(csv_file, 'a', newline='', encoding='utf-8-sig') as file:
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writerow(property_data)
+
+print("End scraping")
