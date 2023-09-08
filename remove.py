@@ -1,8 +1,8 @@
 import pandas as pd
 
 # Sample data
-data_input = 'scraped_data17.csv'
-data_output = 'scraped_data17_rm.csv'
+data_input = 'TinhHuyenXa2021.csv'
+data_output = 'Dim_cities.csv'
 
 # Read CSV file with the correct separator
 df = pd.read_csv(data_input, sep=",")
@@ -11,10 +11,10 @@ df = pd.read_csv(data_input, sep=",")
 print("Shape before drop:", df.shape)
 
 # Remove duplicate rows based on all columns
-df.drop_duplicates(subset='ID', inplace=True)
+df.drop_duplicates(subset=None, inplace=True)
 
 # Remove rows with ' ' in the 'Title' column and assign the result back to df
-df = df[df['ID'] != ' ']
+# df = df[df['ID'] != ' ']
 
 # Print the DataFrame shape after drop
 print("Shape after drop:", df.shape)
