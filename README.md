@@ -43,7 +43,7 @@
 </details>
 
 # About the project
-[![Product Name Screen Shot][product-screenshot]](images/screenshot.png)
+[![Product Name Screen Shot][product-screenshot]](<img src='images/screenshot.png')
 ## Project Overview
 This project contains a Python script (main.py) that performs web scraping to gather property data from 'https://nhadat24h.net'. The data includes information such as Data source, Agent, Category, ID, Title,	Post link, Price, Area,	Location, Timestamp, Estate type, Certification status, Direction, Rooms, Bedrooms, Kitchen, Living room, Bathrooms, Front width, Floor, Parking slot, Description, Seller name, Seller type, Phone, Images, Image URL, Email, Road width, Sizes.
 
@@ -88,13 +88,12 @@ web-scraping-project/<br>
 │   README.md<br>
 │   main.py<br>
 │   timestamp_utils.py<br>
-|   clean.py <br>
-|   combine_csv.py <br>
-|   convert_price <br>
-|   download_images.py <br>
-|   extract_location <br>
-|   Cities.csv
-│<br>
+│   clean.py <br>
+│   combine_csv.py <br>
+│   convert_price <br>
+│   download_images.py <br>
+│   extract_location <br>
+│   Cities.csv<br>
 
 
 main.py: The main crawler script.<br />
