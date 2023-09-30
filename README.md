@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/uyenIMT/Web-Scraping-Data">
-    <img src="images/crawler.png" alt="Logo" width="80" height="80">
+    <img src="images/web_crawler.jpg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Web Scraping Data</h3>
@@ -43,7 +43,7 @@
 </details>
 
 # About the project
-[![Product Name Screen Shot][product-screenshot]](<img src='images/screenshot.png')
+[![Product Name Screen Shot]['images/screenshot.png']
 ## Project Overview
 This project contains a Python script (main.py) that performs web scraping to gather property data from 'https://nhadat24h.net'. The data includes information such as Data source, Agent, Category, ID, Title,	Post link, Price, Area,	Location, Timestamp, Estate type, Certification status, Direction, Rooms, Bedrooms, Kitchen, Living room, Bathrooms, Front width, Floor, Parking slot, Description, Seller name, Seller type, Phone, Images, Image URL, Email, Road width, Sizes.
 
