@@ -1,12 +1,10 @@
 import pandas as pd
-import csv
 
-# csv_file = 'Dim_location1.csv'
-
+input = '.csv'
+output = '.csv'
 # Load the addresses file into a DataFrame
-addresses_df = pd.read_csv('Final_data_rm(version1).csv', encoding='UTF-8-SIG')
-# addresses_df = addresses_df[['ID','Location']] 
-print(addresses_df.head())
+addresses_df = pd.read_csv(input, encoding='UTF-8-SIG')
+# print(addresses_df.head())
 
 # Load the cities/districts file into a DataFrame
 cities_districts_df = pd.read_csv('Cities.csv', encoding='UTF-8-SIG')
@@ -23,4 +21,4 @@ def find_city_district(location):
 addresses_df[["City", "District"]] = addresses_df["Location"].apply(find_city_district).apply(pd.Series)
 
 # Save the new DataFrame to a CSV file
-addresses_df.to_csv('Final_data_rm(version1).csv', index=False)
+addresses_df.to_csv(output, index=False)

@@ -47,6 +47,6 @@ def download_images(csv_file_path, output_folder):
 
     print("End downloading images")
 
-csv_file_path = 'scraped_data17_rm.csv'  # Replace with your CSV file path
-output_folder = 'scraped_images17'
+csv_file_path = ' .csv'  # Replace with your CSV file path
+output_folder = 'folder_name'
 download_images(csv_file_path, output_folder)

@@ -27,7 +27,7 @@ for sub_element in sub_elements:
         sub_menus.append(sub_menu)
 print(sub_menus)
 data = []
-csv_file = 'scraped_data17.csv'
+csv_file = 'scraped_data19.csv'
 
 # Write the header row to the CSV file
 with open(csv_file, 'w', newline='', encoding='utf-8-sig') as file:
@@ -40,7 +40,7 @@ sub_menu_data = {}
 for sub_menu in sub_menus:
     links_for_sub_menu = []
     timestamps_for_sub_menu = []
-    for i in range (1,11):
+    for i in range (1,6):
         url = f'{website}{sub_menu}/page{i}'
         # print(url)
         response = requests.get(url)
